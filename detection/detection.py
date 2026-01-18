@@ -61,6 +61,8 @@ def save_worker():
         print(f"Saved video clip to {output_path}")
 
         output = GMux.clipProcessing(output_path)
+
+        output.severity = 3
         
         if output.severity != 0:
             asset_id = GMux.uploadToMux(output_path)
@@ -166,13 +168,13 @@ while True:
     tracks = tracker.update_tracks(detections, frame=frame)
 
     #cv.line(frame, (0, LINE_Y), (frame.shape[1], LINE_Y), (255, 0, 0), 2)
-    cv.rectangle(frame, (bbox1[0], bbox1[1]), (bbox1[2], bbox1[3]), (255, 0, 0), 2)
-    cv.rectangle(frame, (bbox2[0], bbox2[1]), (bbox2[2], bbox2[3]), (255, 0, 0), 2)
+    cv.rectangle(frame, (bbox1[0], bbox1[1]), (bbox1[2], bbox1[3]), (0, 255, 0), 2)
+    cv.rectangle(frame, (bbox2[0], bbox2[1]), (bbox2[2], bbox2[3]), (0, 0, 255), 2)
 
     cv.putText(
         frame,
-        f"BBOX1",
-        (bbox1[0], bbox1[0] - 10),
+        "Entrance",
+        (bbox1[0], bbox1[1] - 10),
         cv.FONT_HERSHEY_SIMPLEX,
         0.6,
         (0, 255, 0),
@@ -181,11 +183,11 @@ while True:
 
     cv.putText(
         frame,
-        f"BBOX2",
+        "Exit",
         (bbox2[0], bbox2[1] - 10),
         cv.FONT_HERSHEY_SIMPLEX,
         0.6,
-        (0, 255, 0),
+        (0, 0, 255),
         2
     )
 

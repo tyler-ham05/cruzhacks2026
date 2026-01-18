@@ -63,13 +63,13 @@ IMPORTANT RULES:
 """
 
 class IncidentType(str, Enum):
-    SHOPLIFTING = "shoplifting"
-    FIGHT = "fight"
-    TRESPASSING = "trespassing"
-    VANDALISM = "vandalism"
-    SUSPICIOUS_BEHAVIOR = "suspicious_behavior"
-    NONE = "none"
-    OTHER = "other"
+    SHOPLIFTING = "Shoplifting"
+    FIGHT = "Fight"
+    TRESPASSING = "Trespassing"
+    VANDALISM = "Vandalism"
+    SUSPICIOUS_BEHAVIOR = "Suspicious_Behavior"
+    NONE = "None"
+    OTHER = "Other"
 
 class IncidentReport(BaseModel):
     summary: str = Field(
