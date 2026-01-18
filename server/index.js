@@ -29,7 +29,8 @@ app.use(cors())
 
 console.log('hello world')
 //api calls go here
-app.get('/api/:userID', async (req, res, next) => {
+
+app.get('/api/:userID', async (req, res) => {
   try {
     const { userID } = req.params
     const EntryModel = getEntryModel(userID)
