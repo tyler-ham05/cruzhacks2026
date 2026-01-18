@@ -39,24 +39,25 @@ def save_worker():
         print(f"Saved video clip to {output_path}")
 
         output = GMux.clipProcessing(output_path)
+        
+        if output.severity != 0:
+            asset_id = GMux.uploadToMux(output_path)
 
-        asset_id = GMux.uploadToMux(output_path)
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            data = {
+                "videoURL": asset_id,
+                "timestamp": timestamp,
+                "summary": output.summary,
+                "severity": output.severity,
+                "incidentType": output.incident_type,
+            }
 
-        data = {
-            "videoURL": asset_id,
-            "timestamp": timestamp,
-            "summary": output.summary,
-            "severity": output.severity,
-            "incidentType": output.incident_type,
-        }
+            url = "https://localhost3000"
+            response = requests.post(url, data)
 
-        url = "https://localhost3000"
-        response = requests.post(url, data)
-
-        if not response.ok:
-            print("Database request failed")
+            if not response.ok:
+                print("Database request failed")
 
         save_queue.task_done()
 
