@@ -1,6 +1,8 @@
 import { useAuth0 } from "@auth0/auth0-react";
+import { Routes, Route } from "react-router-dom";
 import HomePage from "./homepage";
 import './login.css'
+import IncidentDetails from "./IncidentDetails";
 
 function App() {
   const {
@@ -20,21 +22,30 @@ function App() {
 
   if (isLoading) return "Loading...";
 
-  return isAuthenticated ? (
-    <>
-        <HomePage/>
-    </>
-  ) : (
-    <>
-      {error && <p>Error: {error.message}</p>}
-      <div className="fullView">
-        <div className="mainCol">
-          <img src='src/assets/placeholder.png'/>
-          <button className='loginButtons' onClick={signup}>Signup</button>
-          <button className='loginButtons' onClick={login}>Login</button>
+  if (!isAuthenticated) {
+    return (
+      <>
+        {error && <p>Error: {error.message}</p>}
+        <div className="fullView">
+          <div className="mainCol">
+            <img src="src/assets/placeholder.png" />
+            <button className="loginButtons" onClick={() => login({ authorizationParams: { screen_hint: "signup" } })}>
+              Signup
+            </button>
+            <button className="loginButtons" onClick={login}>
+              Login
+            </button>
+          </div>
         </div>
-      </div>
-    </>
+      </>
+    );
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage userId = {user.sub}/>} />
+      <Route path="/incident" element={<IncidentDetails />} />
+    </Routes>
   );
 }
 

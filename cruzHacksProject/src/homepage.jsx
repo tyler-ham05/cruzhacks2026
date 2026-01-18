@@ -6,11 +6,12 @@ import Wave from 'react-wavify';
 import axios from 'axios';
 import { useEffect } from 'react';
 import MuxPlayer from '@mux/mux-player-react';
+import { useNavigate } from "react-router-dom";
 
 function HomePage(userId) {
   const [activePage, setActivePage] = useState('dashboard');
   const [data, setData] = useState([]);
-
+  const navigate = useNavigate();
   const baseURL = '/api';
 
   useEffect(() => {
@@ -26,17 +27,6 @@ function HomePage(userId) {
         console.log(error);
       });
   }, [userId]);
-
-  const stats = [
-    {
-      label: 'Incidents Prevented',
-      value: '1,247',
-      change: '+12.5% from last month',
-    },
-    { label: 'Active Locations', value: '48', change: '+3 new this quarter' },
-    { label: 'Detection Rate', value: '94.2%', change: '+2.1% improvement' },
-    { label: 'Staff Trained', value: '312', change: '+28 this month' },
-  ];
 
   // Map severity level to icon type
   const getSeverityType = (severity) => {
@@ -68,7 +58,7 @@ function HomePage(userId) {
     <div className="viewArea">
       <div className="mainBox">
         <div className="leftBox">
-          <h1 className="pageTitle">Loss Prevention Dashboard</h1>
+          <h1 className="pageTitle">{userId.userId}</h1>
           <p className="pageSubtitle"></p>
 
           {/*<div className="statsGrid">
@@ -79,11 +69,11 @@ function HomePage(userId) {
             <h2 className="sectionTitle">Recent Activity</h2>
             <div className="activityList">
               {incidents.map((incident, index) => (
-                <div key={index} className="activityItem">
-                  <div className={`activityIcon ${incident.type}`}>
-                    {incident.type === 'direAlert' && '!!!'}
-                    {incident.type === 'alert' && '!'}
-                    {incident.type === 'suspicious' && '?'}
+                <div key={index} className="activityItem" onClick={() => navigate("/incident", { state: incident})}>
+                  <div className='activityIcon'>
+                    <img 
+                    src={
+                      incident.type === 'direAlert' ? 'src/assets/severity3.svg' : incident.type === 'alert' ? 'src/assets/severity2.svg' : 'src/assets/severity1.svg'}/>
                   </div>
                   <div className="activityContent">
                     <div className="activityTitle">{incident.title}</div>
@@ -131,7 +121,7 @@ function HomePage(userId) {
                   />
                 )}
               </div>
-              <div className="statGridItem">
+              <div className="statGridItemUnique">
                 {incidents.length > 0 && (
                   <div className="incidentDetails">
                     <p>

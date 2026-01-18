@@ -69,11 +69,12 @@
 }
 
 .statGridItem,
-.statGridItemVideo {
+.statGridItemVideo,
+.statGridItemUnique {
   background-color: #1A1A1A;
   color: #ffffff;
   font-size: 30px;
-  border: 2px solid #222222;
+  border: 2.5px solid #222222;
   border-radius: 16px;
   padding: 1.25rem;
   transition: all 0.3s ease;
@@ -94,6 +95,7 @@
 .statGridItem:hover{
   border-color: #3b82f6;
   transform: scale(1.008);
+  cursor: pointer;
 }
 
 .recentWarningsSmall {
@@ -172,16 +174,17 @@
   padding: 1rem;
   background: #1A1A1A;
   border-radius: 8px;
-  border: 1px solid #222222;
+  border: 2.5px solid #222222;
   transition: all 0.2s ease;
 }
 
 .activityItem:hover {
   background: #222222;
   border-color: #3b82f6;
+  cursor: pointer;
 }
 
-.activityIcon {
+.activityIcon img {
   width: 40px;
   height: 40px;
   border-radius: 8px;
@@ -192,19 +195,17 @@
   flex-shrink: 0;
 }
 
+
 .activityIcon.direAlert {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ff0000;
+  src: url(assets/severity3.svg);
 }
 
 .activityIcon.alert {
-  background: rgba(185, 182, 16, 0.2);
-  color: #ffff00;
+  src: url(assets/severity2.svg);
 }
 
 .activityIcon.suspicious {
-  background: rgba(145, 145, 145, 0.2);
-  color: #949494;
+  src: url(assets/severity1.svg);
 }
 
 .activityContent {
