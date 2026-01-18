@@ -43,7 +43,7 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<HomePage userId = {user.sub}/>} />
+      <Route path="/" element={<HomePage userId = {user.sub} logout={logout} />} />
       <Route path="/incident" element={<IncidentDetails />} />
     </Routes>
   );

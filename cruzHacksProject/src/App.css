@@ -40,6 +40,7 @@
 .rightBox {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   width: 70%;
   height: 100%;
   padding: 2rem;
@@ -47,12 +48,25 @@
   background: #121212;
 }
 
+.buttonBox {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.buttonBox button {
+  width: 7vw;
+  height: 8vh;
+  border: 2.5px solid #222222;
+}
+
+
 .statGriddy {
   display: grid;
   grid-template-rows: 33% 67%;
   gap: 1rem;
-  height: 96%;
-  border: 1px solid black;
+  height: 90%;
   box-sizing: border-box;
 }
 

@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 import MuxPlayer from '@mux/mux-player-react';
 import { useNavigate } from "react-router-dom";
 
-function HomePage(userId) {
+function HomePage({userId, logout}) {
   const [activePage, setActivePage] = useState('dashboard');
   const [data, setData] = useState([]);
   const navigate = useNavigate();
@@ -85,6 +85,9 @@ function HomePage(userId) {
           </div>
         </div>
         <div className="rightBox">
+          <div className="buttonBox">
+            <button onClick={logout}>Log Out</button>
+          </div>
           <div className="statGriddy">
             <div className="topRow">
               <div className="statGridItem">
