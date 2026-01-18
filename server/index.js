@@ -38,7 +38,7 @@ app.get('/api/:userID', async (req, res) => {
   try {
     const { userID } = req.params
     const EntryModel = getEntryModel(userID)
-    const entries = await EntryModel.find({})
+    const entries = await EntryModel.find({}).sort({'_id': -1})
     res.json(entries)
   } catch (error) {
     next(error)
@@ -51,6 +51,7 @@ app.post('/api', async (req, res, next) => {
     const body = req.body
     const entry = new EntryModel({
         summary: body.summary,
+        extended_summary: body.extended_summary,
         timestamp: body.timestamp,
         videoURL: body.videoURL,
         severity: body.severity,
