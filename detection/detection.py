@@ -5,15 +5,23 @@ import collections
 import threading
 import queue
 import os
+from GeminiMux import IncidentReport
+import GeminiMux as GMux
 from deep_sort_realtime.deepsort_tracker import DeepSort
+import subprocess
+import requests
+import datetime
+
 os.makedirs('clips', exist_ok=True)
 
 save_queue = queue.Queue()
+
 
 def save_worker():
     """Worker thread that saves clips from the queue."""
     while True:
         item = save_queue.get()
+
         if item is None:
             break
         frames, output_path, fps, frame_size = item
@@ -26,8 +34,31 @@ def save_worker():
             if (frame.shape[1], frame.shape[0]) != frame_size:
                 frame = cv.resize(frame, frame_size)
             out.write(frame)
+        
         out.release()
         print(f"Saved video clip to {output_path}")
+
+        output = GMux.clipProcessing(output_path)
+        
+        if output.severity != 0:
+            asset_id = GMux.uploadToMux(output_path)
+
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            data = {
+                "videoURL": asset_id,
+                "timestamp": timestamp,
+                "summary": output.summary,
+                "severity": output.severity,
+                "incidentType": output.incident_type,
+            }
+
+            url = "https://localhost3000"
+            response = requests.post(url, data)
+
+            if not response.ok:
+                print("Database request failed")
+
         save_queue.task_done()
 
 thread = threading.Thread(target=save_worker, daemon=True)
@@ -131,25 +162,15 @@ while True:
             prev_x = track_history[track_id][-2][0]
             curr_x = track_history[track_id][-1][0]
 
-            # Crossing downward = ENTER
-            #if prev_y < LINE_Y and curr_y >= LINE_Y:
-            #     enter_count += 1
-            #     counted_tracks.add(track_id)
-            #     print(f"ENTER: ID {track_id}")
-
-            if prev_x < LINE_X and curr_x >= LINE_X:
-                enter_count += 1
-                counted_tracks.add(track_id)
-                print(f"ENTER: ID {track_id}")
-
             # Crossing upward = EXIT
             # elif prev_y >= LINE_Y and curr_y < LINE_Y:
             #     exit_count += 1
             #     counted_tracks.add(track_id)
             #     print(f"EXIT: ID {track_id}")
             
-            elif prev_x >= LINE_X and curr_x < LINE_X:
+            if prev_x >= LINE_X and curr_x < LINE_X:
                 exit_count += 1
+                event = True
                 counted_tracks.add(track_id)
                 print(f"EXIT: ID {track_id}")
 
@@ -184,7 +205,7 @@ while True:
 
     key = cv.waitKey(20) & 0xFF
 
-    if key == ord('s'):
+    if event:
         clip_frames = list(frame_buffer)
         timestamp = int(time.time())
         output_filename = f'clips/clip_{timestamp}.mp4'

@@ -29,7 +29,12 @@ app.use(cors())
 
 console.log('hello world')
 //api calls go here
-app.get('/api/:userID', async (req, res, next) => {
+
+app.get('/', async (req, res) => {
+  res.json("hello world")
+})
+
+app.get('/api/:userID', async (req, res) => {
   try {
     const { userID } = req.params
     const EntryModel = getEntryModel(userID)
@@ -40,7 +45,7 @@ app.get('/api/:userID', async (req, res, next) => {
   }
 })
 
-app.post('/api', async (req, res) => {
+app.post('/api', async (req, res, next) => {
     const user = req.body.userID
     const EntryModel = getEntryModel(user)
     const body = req.body
@@ -62,6 +67,9 @@ app.post('/api', async (req, res) => {
 app.use(errorHandler)
 
 const PORT = process.env.PORT
+/*
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
+*/
+module.exports = app

@@ -11,6 +11,8 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from enum import Enum
 from typing import Literal
+import subprocess
+import cv2 as cv
 #processes the clip with an AI summary from gemini
 # ensure you have enviroment variables 
 # GEMINI_API_KEY 
@@ -31,8 +33,8 @@ class IncidentReport(BaseModel):
         description="Text summary describing what happened in the video incident."
     )
 
-    severity: Literal[1, 2, 3] = Field(
-        description="Incident severity level from 1 (low) to 3 (high)."
+    severity: Literal[0, 1, 2, 3] = Field(
+        description="Incident severity level from 1 (low) to 3 (high). Return 0 if no major incident occurs."
     )
     incident_type: IncidentType = Field(
         description="Classifier describing the type of incident."
