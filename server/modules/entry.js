@@ -20,7 +20,7 @@ const entrySchema = new mongoose.Schema({
     type: String,
   },
   timestamp: {
-    type: String,
+    type: Date,
   },
   videoURL: {
     type:String
