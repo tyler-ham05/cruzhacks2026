@@ -36,7 +36,6 @@ Your task is to produce a single IncidentReport object that strictly matches the
 
 - severity (integer: 0–3):
   Assign exactly one numeric severity:
-    0 = No incident / normal activity
     1 = Minor (routine or low-risk activity worth noting)
     2 = Medium (unusual or suspicious activity requiring review)
     3 = High (critical incident requiring immediate attention)
@@ -54,7 +53,7 @@ Your task is to produce a single IncidentReport object that strictly matches the
 
 IMPORTANT RULES:
 - If no meaningful or noteworthy incident occurs, set:
-    severity = 0
+    severity = 1
     incident_type = Normal Activity
 - Only escalate severity when there is clear visual evidence.
 - Do not invent actions, intent, or outcomes that cannot be observed.

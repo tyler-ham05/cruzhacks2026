@@ -104,8 +104,13 @@ model = YOLO(cur_path)
 CONFIDENCE_THRESHOLD = 0.8
 
 tracker = DeepSort(max_age=30)
-bbox1 = (120, 180, 360, 620)
-bbox2 = (780, 160, 1050, 640)
+# BBOX1 → Cashier (green)
+bbox1 = (200, 360, 400, 540)
+# BBOX2 → Exit (red)
+bbox2 = (700, 360, 850, 540)
+# BBOX3 → Entrance (blue) — to the right of Exit
+bbox3 = (860, 360, 1010, 540)
+
 
 track_history = {}   # track_id -> list[(x,y)]
 counted_tracks = set() #might be unecessary
@@ -125,8 +130,9 @@ frame_buffer = collections.deque(maxlen=BUFFER_SIZE)
 
 event = False
 
-track_entered_bbox1 = set()
-track_entered_bbox2 = set()
+track_entered_cashier = set()
+track_entered_exit = set()
+track_entered_entrance = set()
 
 while True:
     start_time = time.time()
@@ -166,28 +172,20 @@ while True:
     tracks = tracker.update_tracks(detections, frame=frame)
 
     #cv.line(frame, (0, LINE_Y), (frame.shape[1], LINE_Y), (255, 0, 0), 2)
+    # Cashier
     cv.rectangle(frame, (bbox1[0], bbox1[1]), (bbox1[2], bbox1[3]), (0, 255, 0), 2)
+    cv.putText(frame, "Cashier", (bbox1[0], bbox1[1] - 10),
+            cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+    # Exit
     cv.rectangle(frame, (bbox2[0], bbox2[1]), (bbox2[2], bbox2[3]), (0, 0, 255), 2)
+    cv.putText(frame, "Exit", (bbox2[0], bbox2[1] - 10),
+            cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
-    cv.putText(
-        frame,
-        "Entrance",
-        (bbox1[0], bbox1[1] - 10),
-        cv.FONT_HERSHEY_SIMPLEX,
-        0.6,
-        (0, 255, 0),
-        2
-    )
-
-    cv.putText(
-        frame,
-        "Exit",
-        (bbox2[0], bbox2[1] - 10),
-        cv.FONT_HERSHEY_SIMPLEX,
-        0.6,
-        (0, 0, 255),
-        2
-    )
+    # Entrance
+    cv.rectangle(frame, (bbox3[0], bbox3[1]), (bbox3[2], bbox3[3]), (255, 0, 0), 2)
+    cv.putText(frame, "Entrance", (bbox3[0], bbox3[1] - 10),
+            cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
 
 
 
@@ -197,7 +195,6 @@ while True:
 
         track_id = track.track_id
         l, t, r, b = track.to_ltrb()
-
         cx = int((l + r) / 2)
         cy = int((t + b) / 2)
 
@@ -206,21 +203,29 @@ while True:
             track_history[track_id] = []
         track_history[track_id].append((cx, cy))
 
-        in_bbox1 = point_in_bbox(cx, cy, bbox1)
-        in_bbox2 = point_in_bbox(cx, cy, bbox2)
+        in_cashier = point_in_bbox(cx, cy, bbox1)
+        in_exit = point_in_bbox(cx, cy, bbox2)
+        in_entrance = point_in_bbox(cx, cy, bbox3)
 
-        # Mark if this track has ever entered bbox1
-        if in_bbox1:
-            track_entered_bbox1.add(track_id)
+        if in_cashier:
+            track_entered_cashier.add(track_id)
 
-        # Detect entering bbox2
-        if in_bbox2 and track_id not in track_entered_bbox2:
-            track_entered_bbox2.add(track_id)
+        if in_exit:
+            track_entered_exit.add(track_id)
 
-            # 🚨 Trigger event if they never entered bbox1
-            if track_id not in track_entered_bbox1:
-                event = True
-                print(f"⚠️ ALERT: ID {track_id} entered bbox2 without entering bbox1")
+        if in_entrance:
+            track_entered_entrance.add(track_id)
+
+        # Event condition: Exit → Entrance, never touched Cashier
+        if (track_id in track_entered_exit
+            and track_id in track_entered_entrance
+            and track_id not in track_entered_cashier
+            and track_id not in counted_tracks):
+
+            event = True
+            counted_tracks.add(track_id)
+            print(f"⚠️ ALERT: ID {track_id} triggered Exit→Entrance without Cashier")
+
 
         # -----------------------------
         # Visualization
