@@ -15,10 +15,10 @@ function HomePage() {
   ]
 
   const activities = [ //change type to correspond to severity
-    { type: 'alert', title: 'GOY DETECTED', meta: 'Store #127 - 5 minutes ago' },
-    { type: 'alert', title: 'Penny Stolen', meta: 'Store #089 - 23 minutes ago' },
+    { type: 'alert', title: 'test1', meta: 'Store #127 - 5 minutes ago' },
+    { type: 'alert', title: 'test2', meta: 'Store #089 - 23 minutes ago' },
     { type: 'suspicious', title: 'Unknown', meta: 'Store #045 - 1 hour ago' },
-    { type: 'direAlert', title: 'y/n detected', meta: 'System - 2 hours ago' },
+    { type: 'direAlert', title: 'test3', meta: 'System - 2 hours ago' },
   ]
   
 
@@ -85,7 +85,6 @@ function HomePage() {
               </div>
         </div>
       </div>
-      
     </div>
     
   )
