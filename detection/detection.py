@@ -61,8 +61,6 @@ def save_worker():
         print(f"Saved video clip to {output_path}")
 
         output = GMux.clipProcessing(output_path)
-
-        output.severity = 3
         
         if output.severity != 0:
             asset_id = GMux.uploadToMux(output_path)
