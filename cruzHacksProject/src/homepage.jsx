@@ -3,9 +3,29 @@
 import { useState } from 'react'
 import './App.css'
 import Wave from 'react-wavify'
+import axios from 'axios';
+import { useEffect } from 'react';
+import MuxPlayer from '@mux/mux-player-react';
 
-function HomePage() {
+function HomePage(userId) {
   const [activePage, setActivePage] = useState('dashboard')
+  const [data, setData] = useState([])
+
+  const baseURL = "/api"
+
+  useEffect(() => {
+    axios.get(`${baseURL}/test12345`) //hardcoded change to  axios.get(`${baseURL}/#{userId}`)
+			.then(response => {
+				const incidents = response.data
+        console.log(incidents)
+        console.log(response.status)
+        setData(response)
+      })
+      .catch(error => {
+        console.log(error)
+      })
+      
+  }, ([userId]));
 
   const stats = [
     { label: 'Incidents Prevented', value: '1,247', change: '+12.5% from last month' },
@@ -14,12 +34,21 @@ function HomePage() {
     { label: 'Staff Trained', value: '312', change: '+28 this month' },
   ]
 
-  const activities = [ //change type to correspond to severity
-    { type: 'alert', title: 'GOY DETECTED', meta: 'Store #127 - 5 minutes ago' },
-    { type: 'alert', title: 'Penny Stolen', meta: 'Store #089 - 23 minutes ago' },
-    { type: 'suspicious', title: 'Unknown', meta: 'Store #045 - 1 hour ago' },
-    { type: 'direAlert', title: 'y/n detected', meta: 'System - 2 hours ago' },
-  ]
+  // Map severity level to icon type
+  const getSeverityType = (severity) => {
+    if (severity >= 3) return 'direAlert'
+    if (severity === 2) return 'alert'
+    return 'suspicious'
+  }
+
+  // Convert API response data to incident format
+  const incidents = data.data ? data.data.map(incident => ({
+    type: getSeverityType(incident.severity),
+    title: incident.incidentType,
+    meta: `${incident.summary} - ${incident.timestamp}`,
+    videoURL: incident.videoURL,
+    severity: incident.severity
+  })) : []
   
 
   //const now = new Date();
@@ -46,16 +75,16 @@ function HomePage() {
           <div className="activitySection">
             <h2 className="sectionTitle">Recent Activity</h2>
             <div className="activityList">
-              {activities.map((activity, index) => (
+              {incidents.map((incident, index) => (
                 <div key={index} className="activityItem">
-                  <div className={`activityIcon ${activity.type}`}>
-                    {activity.type === 'direAlert' && '!!!'}
-                    {activity.type === 'alert' && '!'}
-                    {activity.type === 'suspicious' && '?'}
+                  <div className={`activityIcon ${incident.type}`}>
+                    {incident.type === 'direAlert' && '!!!'}
+                    {incident.type === 'alert' && '!'}
+                    {incident.type === 'suspicious' && '?'}
                   </div>
                   <div className="activityContent">
-                    <div className="activityTitle">{activity.title}</div>
-                    <div className="activityMeta">{activity.meta}</div>
+                    <div className="activityTitle">{incident.title}</div>
+                    <div className="activityMeta">{incident.meta}</div>
                   </div>
                 </div>
               ))}
@@ -78,9 +107,26 @@ function HomePage() {
                         </div>
                     </div>
                 </div>
+                  
                 <div className="bottomRow">
-                    <div className="statGridItemVideo"><video src='https://files.catbox.moe/dfs93t.mp4' controls></video></div>
-                    <div className="statGridItem">hi</div>
+                  
+                    <div className="statGridItemVideo"> <MuxPlayer
+      playbackId = {incidents[0].videoURL}
+      metadata={{
+        video_id: "video-id-54321",
+        video_title: "Test video title",
+        viewer_user_id: "user-id-007",
+      }}
+    /></div>
+                    <div className="statGridItem">
+                        {incidents.length > 0 && (
+                          <div className="incidentDetails">
+                            <p><strong>Type:</strong> {incidents[0].title}</p>
+                            <p><strong>Severity:</strong> {incidents[0].severity}</p>
+                            <p><strong>Details:</strong> {incidents[0].meta}</p>
+                          </div>
+                        )}
+                    </div>
                 </div>
               </div>
         </div>
