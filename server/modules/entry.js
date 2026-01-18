@@ -19,6 +19,9 @@ const entrySchema = new mongoose.Schema({
   summary: {
     type: String,
   },
+  extended_summary:{
+    type: String,
+  },
   timestamp: {
     type: Date,
   },
