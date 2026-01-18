@@ -7,10 +7,36 @@ import mux_python
 from mux_python.rest import ApiException
 import time
 import requests
-
+from pydantic import BaseModel, Field
+from typing import List, Optional
+from enum import Enum
+from typing import Literal
 #processes the clip with an AI summary from gemini
 # ensure you have enviroment variables 
 # GEMINI_API_KEY 
+
+prompt = "please review the video and determine if there is criminal conduct being conducted within the clip, mainly shoplifting but also other violent incidents"
+
+class IncidentType(str, Enum):
+    SHOPLIFTING = "shoplifting"
+    FIGHT = "fight"
+    TRESPASSING = "trespassing"
+    VANDALISM = "vandalism"
+    SUSPICIOUS_BEHAVIOR = "suspicious_behavior"
+    NONE = "none"
+    OTHER = "other"
+
+class IncidentReport(BaseModel):
+    summary: str = Field(
+        description="Text summary describing what happened in the video incident."
+    )
+
+    severity: Literal[1, 2, 3] = Field(
+        description="Incident severity level from 1 (low) to 3 (high)."
+    )
+    incident_type: IncidentType = Field(
+        description="Classifier describing the type of incident."
+    )
 
 def clipProcessing(video_file_path):
     # The client gets the API key from the environment variable `GEMINI_API_KEY`.
@@ -24,11 +50,16 @@ def clipProcessing(video_file_path):
                 types.Part(
                     inline_data=types.Blob(data=video_bytes, mime_type='video/mp4')
                 ),
-                types.Part(text='Please summarize the video in 3 sentences.')
+                types.Part(text=prompt)
             ]
-        )
+        ),
+                config={
+        "response_mime_type": "application/json",
+        "response_json_schema": IncidentReport.model_json_schema(),
+        },
     )
-    return(response.text)
+    response = IncidentReport.model_validate_json(response.text)
+    return(response)
 
 # uploads clip to database
 # ensure you have enviroment variables 
@@ -97,5 +128,12 @@ def uploadToMux(video_file_path):
     return asset_id
 
 # Testing!!!
-# print(clipProcessing("example.mp4"))
+
+"""
+classification = clipProcessing("shoplifting.mp4")
+print(classification.summary)
+print(classification.severity)
+print(classification.incident_type)
+"""
+
 # uploadToMux("example.mp4")
