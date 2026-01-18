@@ -5,7 +5,7 @@ import collections
 import threading
 import queue
 import os
-
+from deep_sort_realtime.deepsort_tracker import DeepSort
 os.makedirs('clips', exist_ok=True)
 
 save_queue = queue.Queue()
@@ -33,8 +33,23 @@ def save_worker():
 thread = threading.Thread(target=save_worker, daemon=True)
 thread.start()
 
-model = YOLO(r'model\people.pt')
+cur_path = os.path.join('model', 'best.pt')
+
+print("CWD:", os.getcwd())
+print("Exists?", os.path.exists(cur_path))
+
+model = YOLO(cur_path)
 CONFIDENCE_THRESHOLD = 0.8
+
+tracker = DeepSort(max_age=30)
+#LINE_Y = 300
+LINE_X = 960
+
+track_history = {}   # track_id -> list[(x,y)]
+counted_tracks = set() #might be unecessary
+
+enter_count = 0
+exit_count = 0
 
 VID_WIDTH, VID_HEIGHT = 1280, 720
 FRAME_SIZE = (VID_WIDTH, VID_HEIGHT)
@@ -42,10 +57,10 @@ capture = cv.VideoCapture(0)
 capture.set(cv.CAP_PROP_FRAME_WIDTH, VID_WIDTH)
 capture.set(cv.CAP_PROP_FRAME_HEIGHT, VID_HEIGHT)
 
-FPS = 30
+FPS = 15
 FRAME_TIME = 1/ FPS
 
-BUFFER_SECONDS = 60
+BUFFER_SECONDS = 10
 BUFFER_SIZE = int(FPS * BUFFER_SECONDS)
 frame_buffer = collections.deque(maxlen=BUFFER_SIZE)
 
@@ -61,28 +76,111 @@ while True:
     annotated_frame = frame.copy()
 
     results = model(frame, verbose=False)
+            
+    detections = []
 
-    # Draw bounding boxes on the annotated frame
+    # Draw bounding boxes
     for result in results:
         boxes = result.boxes.xyxy.cpu().numpy()  # [x1, y1, x2, y2]
         confidences = result.boxes.conf.cpu().numpy()
         class_ids = result.boxes.cls.cpu().numpy()
 
         for box, conf, cls in zip(boxes, confidences, class_ids):
-            if conf < CONFIDENCE_THRESHOLD:
+            if (conf < CONFIDENCE_THRESHOLD): 
                 continue
             x1, y1, x2, y2 = map(int, box)
             label = f"{int(cls)}:{conf:.2f}"
 
-            cv.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv.putText(annotated_frame, label, (x1, y1 - 10),
-                       cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            w_box = x2-x1
+
+            h_box = y2-y1
+
+            detections.append(([x1, y1, w_box, h_box], conf, "person"))
+
+            # cv.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            # cv.putText(frame, label, (x1, y1 - 10),
+            #            cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    
+    tracks = tracker.update_tracks(detections, frame=frame)
+
+    #cv.line(frame, (0, LINE_Y), (frame.shape[1], LINE_Y), (255, 0, 0), 2)
+    cv.line(frame, (LINE_X, 0), (LINE_X, frame.shape[0]), (255, 0, 0), 2)
+
+    for track in tracks:
+        if not track.is_confirmed():
+            continue
+
+        track_id = track.track_id
+        l, t, r, b = track.to_ltrb()
+
+        cx = int((l + r) / 2)
+        cy = int((t + b) / 2)
+
+        # Store history
+        if track_id not in track_history:
+            track_history[track_id] = []
+        track_history[track_id].append((cx, cy))
+
+        # -----------------------------
+        # Direction logic
+        # -----------------------------
+        if len(track_history[track_id]) >= 2 and track_id not in counted_tracks:
+            # prev_y = track_history[track_id][-2][1]
+            # curr_y = track_history[track_id][-1][1]
+
+            prev_x = track_history[track_id][-2][0]
+            curr_x = track_history[track_id][-1][0]
+
+            # Crossing downward = ENTER
+            #if prev_y < LINE_Y and curr_y >= LINE_Y:
+            #     enter_count += 1
+            #     counted_tracks.add(track_id)
+            #     print(f"ENTER: ID {track_id}")
+
+            if prev_x < LINE_X and curr_x >= LINE_X:
+                enter_count += 1
+                counted_tracks.add(track_id)
+                print(f"ENTER: ID {track_id}")
+
+            # Crossing upward = EXIT
+            # elif prev_y >= LINE_Y and curr_y < LINE_Y:
+            #     exit_count += 1
+            #     counted_tracks.add(track_id)
+            #     print(f"EXIT: ID {track_id}")
+            
+            elif prev_x >= LINE_X and curr_x < LINE_X:
+                exit_count += 1
+                counted_tracks.add(track_id)
+                print(f"EXIT: ID {track_id}")
+
+        # -----------------------------
+        # Visualization
+        # -----------------------------
+        cv.rectangle(
+            frame,
+            (int(l), int(t)),
+            (int(r), int(b)),
+            (0, 255, 0),
+            2
+        )
+
+        cv.circle(frame, (cx, cy), 4, (0, 0, 255), -1)
+
+        cv.putText(
+            frame,
+            f"ID {track_id}",
+            (int(l), int(t) - 10),
+            cv.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            (0, 255, 0),
+            2
+        )
+
+    cv.imshow('Video (press q to exit)', frame)
 
     elapsed = time.time() - start_time
     time_to_wait = max(0, FRAME_TIME - elapsed)
     time.sleep(time_to_wait)
-
-    cv.imshow('Video (press q to exit)', annotated_frame)
 
     key = cv.waitKey(20) & 0xFF
 
