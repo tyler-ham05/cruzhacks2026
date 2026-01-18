@@ -6,7 +6,13 @@ import Wave from 'react-wavify';
 import axios from 'axios';
 import { useEffect } from 'react';
 import MuxPlayer from '@mux/mux-player-react';
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
+import severity3 from './assets/severity3.svg';
+import severity2 from './assets/severity2.svg';
+import severity1 from './assets/severity1.svg';
+import alerticon from './assets/alert.svg';
+import checkicon from './assets/check.svg';
+import cameraIcon from './assets/camera.svg';
 
 function HomePage(userId) {
   const [activePage, setActivePage] = useState('dashboard');
@@ -69,11 +75,21 @@ function HomePage(userId) {
             <h2 className="sectionTitle">Recent Activity</h2>
             <div className="activityList">
               {incidents.map((incident, index) => (
-                <div key={index} className="activityItem" onClick={() => navigate("/incident", { state: incident})}>
-                  <div className='activityIcon'>
-                    <img 
-                    src={
-                      incident.type === 'direAlert' ? 'src/assets/severity3.svg' : incident.type === 'alert' ? 'src/assets/severity2.svg' : 'src/assets/severity1.svg'}/>
+                <div
+                  key={index}
+                  className="activityItem"
+                  onClick={() => navigate('/incident', { state: incident })}
+                >
+                  <div className="activityIcon">
+                    <img
+                      src={
+                        incident.type === 'direAlert'
+                          ? { severity3 }
+                          : incident.type === 'alert'
+                            ? { severity2 }
+                            : { severity1 }
+                      }
+                    />
                   </div>
                   <div className="activityContent">
                     <div className="activityTitle">{incident.title}</div>
@@ -90,18 +106,14 @@ function HomePage(userId) {
               <div className="statGridItem">
                 <div className="recentWarningsSmall">
                   <img
-                    src={
-                      totalRecentEvents > 0
-                        ? 'src/assets/alert.svg'
-                        : 'src/assets/check.svg'
-                    }
+                    src={totalRecentEvents > 0 ? { alertIcon } : { checkIcon }}
                   />
                   <p>Issues Today : {totalRecentEvents}</p>
                 </div>
               </div>
               <div className="statGridItem">
                 <div className="liveFeeds">
-                  <img src="src/assets/camera.svg" />
+                  <img src={cameraIcon} />
                   <p>View Live Feed</p>
                 </div>
               </div>
