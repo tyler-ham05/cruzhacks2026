@@ -1,0 +1,24 @@
+{
+  "name": "cruzhacksproject",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@auth0/auth0-react": "^2.11.0",
+    "@mux/mux-player-react": "^3.10.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-wavify": "^1.11.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.27",
+    "@types/react-dom": "^18.0.10",
+    "@vitejs/plugin-react": "^5.1.2",
+    "vite": "^7.3.1"
+  }
+}
