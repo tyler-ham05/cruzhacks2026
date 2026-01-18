@@ -18,6 +18,26 @@ save_queue = queue.Queue()
 
 UID = 'google-oauth2|112660930199868117288'
 
+def save_first_frame(frames, output_path):
+    if not frames:
+        print("⚠️ No frames provided, cannot save first frame.")
+        return False
+
+    first_frame = frames[0]
+
+    success = cv.imwrite(output_path, first_frame)
+
+    if not success:
+        print(f"❌ Failed to save first frame to {output_path}")
+        return False
+
+    print(f"✅ Saved first frame to {output_path}")
+    return True
+
+
+def point_in_bbox(x, y, bbox):
+    x1, y1, x2, y2 = bbox
+    return x1 <= x <= x2 and y1 <= y <= y2
 
 def save_worker():
     """Worker thread that saves clips from the queue."""
@@ -53,15 +73,23 @@ def save_worker():
                 "timestamp": timestamp,
                 "summary": output.summary,
                 "severity": output.severity,
+                "extended_summary": output.extended_summary,
                 "incidentType": output.incident_type,
             }
 
             url = "https://cruzhacks2026server.vercel.app/api"
-            response = requests.post(url, data)
+            response = requests.post(url, json=data)
 
             if not response.ok:
                 print("Database request failed")
 
+        folder_path = os.path.join("clips/")
+
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            
+            if os.path.isfile(file_path):
+                os.remove(file_path)
         save_queue.task_done()
 
 thread = threading.Thread(target=save_worker, daemon=True)
@@ -76,14 +104,11 @@ model = YOLO(cur_path)
 CONFIDENCE_THRESHOLD = 0.8
 
 tracker = DeepSort(max_age=30)
-#LINE_Y = 300
-LINE_X = 960
+bbox1 = (120, 180, 360, 620)
+bbox2 = (780, 160, 1050, 640)
 
 track_history = {}   # track_id -> list[(x,y)]
 counted_tracks = set() #might be unecessary
-
-enter_count = 0
-exit_count = 0
 
 VID_WIDTH, VID_HEIGHT = 1280, 720
 FRAME_SIZE = (VID_WIDTH, VID_HEIGHT)
@@ -99,6 +124,9 @@ BUFFER_SIZE = int(FPS * BUFFER_SECONDS)
 frame_buffer = collections.deque(maxlen=BUFFER_SIZE)
 
 event = False
+
+track_entered_bbox1 = set()
+track_entered_bbox2 = set()
 
 while True:
     start_time = time.time()
@@ -138,7 +166,30 @@ while True:
     tracks = tracker.update_tracks(detections, frame=frame)
 
     #cv.line(frame, (0, LINE_Y), (frame.shape[1], LINE_Y), (255, 0, 0), 2)
-    cv.line(frame, (LINE_X, 0), (LINE_X, frame.shape[0]), (255, 0, 0), 2)
+    cv.rectangle(frame, (bbox1[0], bbox1[1]), (bbox1[2], bbox1[3]), (255, 0, 0), 2)
+    cv.rectangle(frame, (bbox2[0], bbox2[1]), (bbox2[2], bbox2[3]), (255, 0, 0), 2)
+
+    cv.putText(
+        frame,
+        f"BBOX1",
+        (bbox1[0], bbox1[0] - 10),
+        cv.FONT_HERSHEY_SIMPLEX,
+        0.6,
+        (0, 255, 0),
+        2
+    )
+
+    cv.putText(
+        frame,
+        f"BBOX2",
+        (bbox2[0], bbox2[1] - 10),
+        cv.FONT_HERSHEY_SIMPLEX,
+        0.6,
+        (0, 255, 0),
+        2
+    )
+
+
 
     for track in tracks:
         if not track.is_confirmed():
@@ -155,27 +206,21 @@ while True:
             track_history[track_id] = []
         track_history[track_id].append((cx, cy))
 
-        # -----------------------------
-        # Direction logic
-        # -----------------------------
-        if len(track_history[track_id]) >= 2 and track_id not in counted_tracks:
-            # prev_y = track_history[track_id][-2][1]
-            # curr_y = track_history[track_id][-1][1]
+        in_bbox1 = point_in_bbox(cx, cy, bbox1)
+        in_bbox2 = point_in_bbox(cx, cy, bbox2)
 
-            prev_x = track_history[track_id][-2][0]
-            curr_x = track_history[track_id][-1][0]
+        # Mark if this track has ever entered bbox1
+        if in_bbox1:
+            track_entered_bbox1.add(track_id)
 
-            # Crossing upward = EXIT
-            # elif prev_y >= LINE_Y and curr_y < LINE_Y:
-            #     exit_count += 1
-            #     counted_tracks.add(track_id)
-            #     print(f"EXIT: ID {track_id}")
-            
-            if prev_x >= LINE_X and curr_x < LINE_X:
-                exit_count += 1
+        # Detect entering bbox2
+        if in_bbox2 and track_id not in track_entered_bbox2:
+            track_entered_bbox2.add(track_id)
+
+            # 🚨 Trigger event if they never entered bbox1
+            if track_id not in track_entered_bbox1:
                 event = True
-                counted_tracks.add(track_id)
-                print(f"EXIT: ID {track_id}")
+                print(f"⚠️ ALERT: ID {track_id} entered bbox2 without entering bbox1")
 
         # -----------------------------
         # Visualization
@@ -213,12 +258,16 @@ while True:
         timestamp = int(time.time())
         output_filename = f'clips/clip_{timestamp}.mp4'
         save_queue.put((clip_frames, output_filename, FPS, FRAME_SIZE))
+        event = False
 
     if key == ord('q'):
         break
 
 
 capture.release()
+
+save_first_frame(list(frame_buffer), "clips/clip_0.jpg")
+
 cv.destroyAllWindows()
 
 save_queue.put(None)
