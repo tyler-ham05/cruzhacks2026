@@ -174,8 +174,10 @@ def uploadToMux(video_file_path):
     )
     asset = assets_api.get_asset(asset_id)
     print(f"Asset status: {asset.data.status}")
+    playback_id = asset.data.playback_ids[0].id
+    print(f"Playback ID 🎬: {playback_id}")
 
-    return asset_id
+    return playback_id
 
 # Testing!!!
 
