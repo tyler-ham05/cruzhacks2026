@@ -16,6 +16,8 @@ os.makedirs('clips', exist_ok=True)
 
 save_queue = queue.Queue()
 
+UID = 'google-oauth2|112660930199868117288'
+
 
 def save_worker():
     """Worker thread that saves clips from the queue."""
@@ -46,6 +48,7 @@ def save_worker():
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             data = {
+                "userID": UID,
                 "videoURL": asset_id,
                 "timestamp": timestamp,
                 "summary": output.summary,
@@ -53,7 +56,7 @@ def save_worker():
                 "incidentType": output.incident_type,
             }
 
-            url = "https://localhost3000"
+            url = "https://cruzhacks2026server.vercel.app/api"
             response = requests.post(url, data)
 
             if not response.ok:
@@ -95,6 +98,8 @@ BUFFER_SECONDS = 10
 BUFFER_SIZE = int(FPS * BUFFER_SECONDS)
 frame_buffer = collections.deque(maxlen=BUFFER_SIZE)
 
+event = False
+
 while True:
     start_time = time.time()
 
@@ -103,8 +108,6 @@ while True:
         continue
 
     frame_buffer.append(frame)
-
-    annotated_frame = frame.copy()
 
     results = model(frame, verbose=False)
             

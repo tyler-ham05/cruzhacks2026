@@ -138,4 +138,4 @@ print(classification.severity)
 print(classification.incident_type)
 """
 
-# uploadToMux("example.mp4")
+# print(clipProcessing('clips\clip_1768719951.mp4'))
