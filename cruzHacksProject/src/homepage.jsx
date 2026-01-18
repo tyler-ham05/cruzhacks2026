@@ -131,7 +131,6 @@ function HomePage(userId) {
               </div>
         </div>
       </div>
-      
     </div>
     
   )

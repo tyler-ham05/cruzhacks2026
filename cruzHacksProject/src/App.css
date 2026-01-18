@@ -11,6 +11,7 @@
   background: #060606;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   display: flex;
+  flex-direction: column;
 }
 
 .mainBox {
@@ -72,7 +73,7 @@
   background-color: #1A1A1A;
   color: #ffffff;
   font-size: 30px;
-  border: 1px solid #222222;
+  border: 2px solid #222222;
   border-radius: 16px;
   padding: 1.25rem;
   transition: all 0.3s ease;
@@ -92,7 +93,7 @@
 
 .statGridItem:hover{
   border-color: #3b82f6;
-  transform: scale(1.01);
+  transform: scale(1.008);
 }
 
 .recentWarningsSmall {
@@ -130,6 +131,7 @@
     width: 70px;
     margin-left: 1%;
 }
+
 
 .pageTitle {
   font-size: 1.75rem;

@@ -1,5 +1,6 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import HomePage from "./homepage";
+import './login.css'
 
 function App() {
   const {
@@ -26,10 +27,13 @@ function App() {
   ) : (
     <>
       {error && <p>Error: {error.message}</p>}
-
-      <button onClick={signup}>Signup</button>
-
-      <button onClick={login}>Login</button>
+      <div className="fullView">
+        <div className="mainCol">
+          <img src='src/assets/placeholder.png'/>
+          <button className='loginButtons' onClick={signup}>Signup</button>
+          <button className='loginButtons' onClick={login}>Login</button>
+        </div>
+      </div>
     </>
   );
 }
